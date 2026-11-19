@@ -27,11 +27,7 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "django-stubs[compatible-mypy]>=6.1.2",
+    "djangorestframework-stubs>=3.18.2",
     "mypy>=2.4.1",
 ]
 
-[tool.mypy]
-plugins = ["mypy_django_plugin.main"]
-
-[tool.django-stubs]
-django_settings_module = "config.settings"

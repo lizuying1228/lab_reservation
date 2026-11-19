@@ -3,6 +3,10 @@ from lab_admins.models import LabAdmin
 
 # Create your models here.
 class Laboratory(models.Model):
+    class Meta:
+        verbose_name = "实验室"
+        verbose_name_plural = "实验室"
+        
     class StatusChoices(models.TextChoices):
         OPEN = "open", "开放"
         CLOSED = "closed", "关闭"
@@ -13,6 +17,8 @@ class Laboratory(models.Model):
     labadmin = models.ForeignKey(LabAdmin, on_delete=models.SET_NULL, related_name="labs", 
                                  blank=True, null=True, verbose_name="实验室管理员")
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.OPEN, verbose_name="状态")
+    is_deleted = models.BooleanField(default=False, verbose_name="是否删除")
+    deleted_at = models.DateTimeField(blank=True, null=True, verbose_name="删除时间")
 
     def __str__(self):
         return self.lab_no

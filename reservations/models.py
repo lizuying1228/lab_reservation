@@ -12,6 +12,9 @@ class Reservation(models.Model):
             )
         ]
 
+        verbose_name = "预约记录"
+        verbose_name_plural= "预约记录"
+
     class StatusChoices(models.TextChoices):
         PENDING = "pending", "待审核"
         APPROVED = "approved", "已通过"
@@ -22,7 +25,7 @@ class Reservation(models.Model):
     reservationtime = models.ForeignKey(ReservationTime, on_delete=models.PROTECT, related_name="reservations", verbose_name="预约")
     status = models.CharField(max_length=20, blank=False, null=False, 
                               choices=StatusChoices.choices, default=StatusChoices.PENDING, verbose_name="预约状态")
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="预约记录时间")
 
     def __str__(self):
         status = self.get_status_display()
