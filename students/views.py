@@ -27,8 +27,8 @@ class StudentViewSet(ModelViewSet):
         return Student.objects.none()
 
     def perform_destroy(self, instance):
-        user = self.request.user
-        delete_student(student_id=instance.id, user_id=user.id)
+        operator_id = self.request.user.id
+        delete_student(student_id=instance.id, operator_id=operator_id)
 
 
     

@@ -179,11 +179,11 @@ def update_student(student_id, validated_data, operator_id):
     birth_date = validated_data.get("birth_date")
 
     update_fields = []
-    if name and student.name != name:
+    if name is not None and student.name != name:
         student.name = name
         update_fields.append("name")
 
-    if birth_date and student.birth_date != birth_date:
+    if birth_date is not None and student.birth_date != birth_date:
         student.birth_date = birth_date
         update_fields.append("birth_date")
 

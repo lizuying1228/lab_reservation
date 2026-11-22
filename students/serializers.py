@@ -1,7 +1,7 @@
 from students.models import Student
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from students.services import create_student
+from students.services import create_student, update_student
 
 User = get_user_model()
 class StudentCreateSerializer(serializers.ModelSerializer):
@@ -32,6 +32,10 @@ class StudentCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"username": "必须有用户名和密码，密码不能小于八位数"})
 
         return attrs
+
+    def update(self, instance, validated_data):
+        operator_id = self.context["request"].user.id
+        return update_student(student_id=instance.id, validated_data=validated_data, operator_id=operator_id)
 
     def create(self, validated_data):
         operator_id = self.context["request"].user.id

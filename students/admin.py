@@ -92,7 +92,7 @@ class StudentAdmin(admin.ModelAdmin):
         )
 
     def delete_queryset(self, request, queryset):
-        for student_id in queryset.values_list("id", flat=True):
+        for student_id in queryset.filter(is_deleted=False).order_by("id").values_list("id", flat=True):
             delete_student(
                 student_id=student_id,
                 operator_id=request.user.id
