@@ -33,10 +33,6 @@ class StudentCreateSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def update(self, instance, validated_data):
-        operator_id = self.context["request"].user.id
-        return update_student(student_id=instance.id, validated_data=validated_data, operator_id=operator_id)
-
     def create(self, validated_data):
         operator_id = self.context["request"].user.id
         return create_student(validated_data=validated_data, operator_id=operator_id)
@@ -46,3 +42,7 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = ["id", "name", "student_no", "birth_date", "user"]
         read_only_fields = ["student_no", "user", "id"]
+
+    def update(self, instance, validated_data):
+        operator_id = self.context["request"].user.id
+        return update_student(student_id=instance.id, validated_data=validated_data, operator_id=operator_id)

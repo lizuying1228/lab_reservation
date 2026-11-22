@@ -19,10 +19,6 @@ class LabAdminCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"Error": "实验室管理员编号已存在"})
         return value
 
-    def update(self, instance, validated_data):
-        operator_id = self.context["request"].user.id
-        return update_labadmin(labadmin_id=instance.id, validated_data=validated_data, operator_id=operator_id)
-
     def create(self, validated_data):
         operator_id = self.context["request"].user.id
         return create_labadmin(validated_data=validated_data, operator_id=operator_id)
@@ -32,4 +28,8 @@ class LabAdminSerializer(serializers.ModelSerializer):
         model = LabAdmin
         fields = ["id", "name", "admin_no", "birth_date", "user"]
         read_only_fields = ["id", "admin_no", "user"]
+
+    def update(self, instance, validated_data):
+        operator_id = self.context["request"].user.id
+        return update_labadmin(labadmin_id=instance.id, validated_data=validated_data, operator_id=operator_id)
         

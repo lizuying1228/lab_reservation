@@ -24,19 +24,13 @@ class LabViewSet(ModelViewSet):
             return LaboratoryCreateSerializer
         return LaboratorySerializer
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        lab = serializer.save()
-        logger.info("Lab created successfully: lab_id=%s, lab_no=%s, user_id=%s", lab.id, lab.lab_no, user.id)
-
     def perform_update(self, serializer):
         user = self.request.user
         if hasattr(user, "labadmin") and "labadmin" in serializer.validated_data:
             raise serializers.ValidationError({"Error": "实验室管理员不允许修改管理员"})
-        lab = serializer.save()
-        logger.info("Lab updated successfully: lab_id=%s, lab_no=%s, user_id=%s", lab.id, lab.lab_no, user.id)
+        serializer.save()
 
     def perform_destroy(self, instance):
-        user = self.request.user
-        delete_laboratory(lab_id=instance.id, user_id=user.id)
+        operator_id = self.request.user
+        delete_laboratory(lab_id=instance.id, operator_id=operator_id)
         

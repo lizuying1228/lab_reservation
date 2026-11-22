@@ -1,7 +1,7 @@
 from labs.models import Laboratory
 from lab_admins.models import LabAdmin
 from rest_framework import serializers
-from django.db import transaction
+from labs.services import create_laboratory, update_laboratory, delete_laboratory
 
 class LaboratoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,12 +23,9 @@ class LaboratoryCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"Error": "该管理员不存在或不可用"})
         return value
 
-    @transaction.atomic
     def create(self, validated_data):
-        labadmin_admin_no = validated_data.pop("labadmin_admin_no")
-        labadmin = LabAdmin.objects.get(admin_no = labadmin_admin_no, is_deleted=False, 
-                                        user__is_deleted=False, user__is_active=True)
-        return Laboratory.objects.create(labadmin = labadmin, **validated_data)
+        operator_id = self.context["request"].user.id
+        create_laboratory(validated_data=validated_data, operator_id=operator_id)
 
 
 class LaboratorySerializer(serializers.ModelSerializer):
@@ -37,5 +34,7 @@ class LaboratorySerializer(serializers.ModelSerializer):
         fields = ["id", "lab_no", "position", "labadmin", "status"]
         read_only_fields = ["id", "lab_no"]
 
-    
+    def update(self, instance, validated_data):
+        operator_id = self.context["request"].user.id
+        update_laboratory(lab_id=instance.id, validated_data=validated_data, operator_id=operator_id)
         
