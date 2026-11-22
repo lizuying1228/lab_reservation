@@ -1,7 +1,7 @@
 from students.models import Student
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from students.services import create_student
 
 User = get_user_model()
 class StudentCreateSerializer(serializers.ModelSerializer):
@@ -24,54 +24,18 @@ class StudentCreateSerializer(serializers.ModelSerializer):
         username = attrs.get("username", "")
         password = attrs.get("password", "")
 
-        if user_id:
-            try:
-                target_user = User.objects.get(id = user_id)
-            except User.DoesNotExist:
-                raise serializers.ValidationError({"Error": "该用户不存在"})
-
-            if not target_user.is_active or target_user.is_deleted:
-                raise serializers.ValidationError({"Error": "该用户已停用"})
-
-            if hasattr(target_user, "labadmin"):
-                raise serializers.ValidationError({"Error": "该用户已绑定实验室管理员"})
-
-            if target_user.is_superuser:
-                raise serializers.ValidationError({"Error": "该用户已绑定超级管理员"})
-
-            if hasattr(target_user, "student"):
-                raise serializers.ValidationError({"Error": "该用户已绑定学生档案"})
-
-            if username:
-                raise serializers.ValidationError({"Error": "已有未绑定用户，不需要重新注册用户"})
-
-            if password:
+        if user_id is not None:
+            if username or password:
                 raise serializers.ValidationError({"Error": "已有未绑定用户，不需要重新注册用户"})
         else:
-            if not username:
-                raise serializers.ValidationError({"username": "必须有用户名"})
-            
-            if not password or len(password) < 8:
-                raise serializers.ValidationError({"password": "必须有密码，且不小于八位数"})
-
-            exists = User.objects.filter(username = username).exists()
-            if exists:
-                raise serializers.ValidationError({"username": "用户名重复"})
+            if not username or not password:
+                raise serializers.ValidationError({"username": "必须有用户名和密码，密码不能小于八位数"})
 
         return attrs
 
-    @transaction.atomic
     def create(self, validated_data):
-        user_id = validated_data.pop("user_id", None)
-
-        if user_id:
-            user = User.objects.get(id = user_id)
-        else:
-            username = validated_data.pop("username")
-            password = validated_data.pop("password")
-            user = User.objects.create_user(username=username, password=password)
-
-        return Student.objects.create(user = user, **validated_data)
+        operator_id = self.context["request"].user.id
+        return create_student(validated_data=validated_data, operator_id=operator_id)
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:

@@ -15,11 +15,14 @@ class ReservationPermission(BasePermission):
         if request.method in SAFE_METHODS:
             return is_student or is_labadmin or is_superuser
         
-        elif request.method == "POST":
+        elif request.method == "POST" and view.action == "create":
             return is_student
         
-        elif request.method in ["PUT", "PATCH"]:
+        elif request.method == "PATCH" and view.action == "review":
             return is_labadmin or is_superuser
+
+        elif request.method == "PATCH" and view.action == "cancel":
+            return is_student
         
         return False
 
@@ -29,18 +32,26 @@ class ReservationPermission(BasePermission):
         is_superuser = IsSuperuser().has_permission(request=request, view=view)
         is_labadmin = IsLabAdmin().has_permission(request=request, view=view)
 
-        if is_superuser:
-            return request.method in SAFE_METHODS or request.method in ["PUT", "PATCH"]
-        
-        elif is_labadmin:
-            labadmin = obj.reservationtime.lab.labadmin
-            if labadmin is not None and request.user.id == labadmin.user_id:
-                return request.method in SAFE_METHODS or request.method in ["PUT", "PATCH"]
+        if request.method in SAFE_METHODS:
+            if is_superuser:
+                return True
 
-        elif is_student:
-            if request.user.id == obj.student.user_id:
-                return request.method in SAFE_METHODS
-            
+            if is_labadmin:
+                labadmin = obj.reservationtime.lab.labadmin
+                return (
+                    labadmin is not None
+                    and request.user.id == labadmin.user_id
+                )
+
+            if is_student:
+                return request.user.id == obj.student.user_id
+
+        if view.action == "review":
+            return is_superuser or is_labadmin
+
+        if view.action == "cancel":
+            return is_student and request.user.id == obj.student.user_id
+
         return False
     
         

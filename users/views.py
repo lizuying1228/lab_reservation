@@ -1,7 +1,10 @@
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from users.serializers import UserRegisterSerializer, UserSerializer, UserLogoutSerializer, UserProfileSerializer
+from users.serializers import UserRegisterSerializer, UserLogoutSerializer, UserProfileSerializer, UserSerializer
 from rest_framework import status
+from users.services import delete_user
+from users.permissions import IsSuperuser
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -71,4 +74,19 @@ class UserProfileView(APIView):
         return Response({"Error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserDeleteView(APIView):
+    permission_classes = [IsSuperuser]
 
+    def delete(self, request, user_id):
+        user = get_object_or_404(User, id = user_id)
+        delete_user(target_user_id=user.id, operator_id=request.user.id)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserView(APIView):
+    permission_classes = [IsSuperuser]
+
+    def get(self, request):
+        queryset = User.objects.filter(is_deleted=False, is_active=True)
+        serializer = UserSerializer(queryset, many=True)
+        return Response({"users": serializer.data}, status=status.HTTP_200_OK)

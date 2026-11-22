@@ -32,6 +32,8 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
         if reservationtime.status != ReservationTime.StatusChoices.AVAILABLE:
             raise serializers.ValidationError({"Error": "预约时间已被占用"})
 
+        attrs["reservationtime"] = reservationtime
+
         exists = Reservation.objects.filter(student=user.student, reservationtime=reservationtime).exists()
         if exists:
             raise serializers.ValidationError({"Error": "该账户已预约过此时间段"})
@@ -42,9 +44,8 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context["request"].user
         student = user.student
-        reservationtime_id = validated_data.pop("reservationtime_id")
-        reservationtime = ReservationTime.objects.get(id = reservationtime_id, is_deleted=False,
-                                                      lab__is_deleted=False)
+        validated_data.pop("reservationtime_id")
+        reservationtime = validated_data.pop("reservationtime")
         return Reservation.objects.create(student=student, reservationtime=reservationtime)
 
 
@@ -56,28 +57,30 @@ class ReservationReviewSerializer(serializers.Serializer):
         ]
     )
 
-    def validate(self, attrs):
-        user = self.context["request"].user
-        if not (user.is_superuser or hasattr(user, "labadmin")):
-            raise serializers.ValidationError({"Error": "非管理员不允许审核"})
+    # def validate(self, attrs):
+    #     user = self.context["request"].user
+    #     if not (user.is_superuser or hasattr(user, "labadmin")):
+    #         raise serializers.ValidationError({"Error": "非管理员不允许审核"})
 
-        reservation = self.instance
-        reservationtime = reservation.reservationtime
-        current_status = reservation.status
+    #     reservation = self.instance
+    #     reservationtime = reservation.reservationtime
+    #     current_status = reservation.status
+    #     if reservationtime.is_deleted:
+    #         raise serializers.ValidationError({"Error": "该预约时段已停用"})
 
-        lab = getattr(reservationtime, 'lab', None)
-        if lab is None or lab.is_deleted:
-            raise serializers.ValidationError({"Error": "该实验室已停用"})
+    #     lab = getattr(reservationtime, 'lab', None)
+    #     if lab is None or lab.is_deleted:
+    #         raise serializers.ValidationError({"Error": "该实验室已停用"})
         
-        target_admin = getattr(lab, 'labadmin', None)
+    #     target_admin = getattr(lab, 'labadmin', None)
         
-        if hasattr(user, "labadmin") and user.labadmin != target_admin:
-            raise serializers.ValidationError({"Error": "非该实验室管理员不允许审核"})
+    #     if hasattr(user, "labadmin") and user.labadmin != target_admin:
+    #         raise serializers.ValidationError({"Error": "非该实验室管理员不允许审核"})
 
-        if current_status != Reservation.StatusChoices.PENDING:
-            raise serializers.ValidationError({"Error": "该预约不是待审核"})
+    #     if current_status != Reservation.StatusChoices.PENDING:
+    #         raise serializers.ValidationError({"Error": "该预约不是待审核"})
 
-        return attrs 
+    #     return attrs 
 
 
 class ReservationSerializer(serializers.ModelSerializer):
