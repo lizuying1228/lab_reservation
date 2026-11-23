@@ -35,7 +35,7 @@ class ReservationTimeViewSet(ModelViewSet):
         
         reservationtime = create_reservationtime(
             validated_data=serializer.validated_data,
-            user_id=user.id,
+            operator_id=user.id,
             labadmin_id=labadmin_id,
             is_superuser=user.is_superuser
         )
@@ -53,14 +53,14 @@ class ReservationTimeViewSet(ModelViewSet):
         reservationtime = update_reservationtime(
             reservationtime_id=serializer.instance.id,             
             validated_data=serializer.validated_data,
-            user_id=user.id)
+            operator_id=user.id)
         
         serializer.instance = reservationtime
 
 
     def perform_destroy(self, instance):
         user = self.request.user
-        delete_reservationtime(reservationtime_id=instance.id, user_id=user.id)
+        delete_reservationtime(reservationtime_id=instance.id, operator_id=user.id)
 
 
         

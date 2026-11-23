@@ -130,9 +130,9 @@ def _create_student_atomic(validated_data, operator_id):
 
     student = Student.objects.create(name=name, student_no=student_no, birth_date=birth_date, user=user)
 
-    logger.info("Student created successfully: "
+    transaction.on_commit(lambda: logger.info("Student created successfully: "
                 "student_id=%s, student_no=%s, user_id=%s, operator_id=%s",
-                student.id, student.student_no, user.id, operator_id)
+                student.id, student.student_no, user.id, operator_id))
 
     return student
 

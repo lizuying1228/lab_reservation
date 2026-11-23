@@ -62,9 +62,9 @@ def _create_labadmin_atomic(validated_data, operator_id):
     user = User.objects.create_user(username=username, password=password)
     labadmin = LabAdmin.objects.create(user=user, name=name, admin_no=admin_no, birth_date=birth_date)
 
-    logger.info("LabAdmin created successfully: "
+    transaction.on_commit(lambda: logger.info("LabAdmin created successfully: "
                 "labadmin_id=%s, admin_no=%s, operator_id=%s",
-                labadmin.id, labadmin.admin_no, operator_id)
+                labadmin.id, labadmin.admin_no, operator_id))
 
     return labadmin
 

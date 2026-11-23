@@ -2,18 +2,34 @@ from reservation_times.models import ReservationTime
 from labs.models import Laboratory
 from reservations.models import Reservation
 from rest_framework import serializers
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.utils import timezone
 import logging
 
 logger = logging.getLogger(__name__)
 
 @transaction.atomic
-def delete_reservationtime(reservationtime_id, user_id):
+def delete_reservationtime(reservationtime_id, operator_id):
+    try:
+        reservationtime_info = ReservationTime.objects.only("lab_id").get(id = reservationtime_id)
+    except ReservationTime.DoesNotExist:
+        raise serializers.ValidationError({"Error": "预约时段不存在"})
+
+    try:
+        laboratory = Laboratory.objects.select_for_update().get(id = reservationtime_info.lab_id)
+    except Laboratory.DoesNotExist:
+        raise serializers.ValidationError({"Error": "实验室不存在"})
+
+    if laboratory.is_deleted:
+        raise serializers.ValidationError({"Error": "实验室已删除"})
+    
     try:
         reservationtime = ReservationTime.objects.select_for_update().get(id = reservationtime_id)
     except ReservationTime.DoesNotExist:
         raise serializers.ValidationError({"Error": "预约时段不存在"})
+
+    if reservationtime.lab_id != laboratory.id:
+        raise serializers.ValidationError({"Error": "预约时段实验室错误，请重试"})
 
     if reservationtime.is_deleted:
         raise serializers.ValidationError({"Error": "预约时段已删除"})
@@ -26,15 +42,15 @@ def delete_reservationtime(reservationtime_id, user_id):
     reservationtime.deleted_at = timezone.now()
     reservationtime.save(update_fields=["is_deleted", "deleted_at"])
 
-    logger.info("ReservationTime deleted successfully:"
+    transaction.on_commit(lambda: logger.info("ReservationTime deleted successfully:"
                 "reservationtime_id=%s, lab_id=%s, user_id=%s",
-                reservationtime.id, reservationtime.lab_id, user_id)
+                reservationtime.id, reservationtime.lab_id, operator_id))
 
     return reservationtime
 
 
 @transaction.atomic
-def update_reservationtime(reservationtime_id, validated_data, user_id):
+def update_reservationtime(reservationtime_id, validated_data, operator_id):
     try:
         reservationtime_info = ReservationTime.objects.only("lab_id").get(id = reservationtime_id)
     except ReservationTime.DoesNotExist:
@@ -77,11 +93,14 @@ def update_reservationtime(reservationtime_id, validated_data, user_id):
         raise serializers.ValidationError({"Error": "只能选择开放的实验室"})
     
     if Reservation.objects.filter(reservationtime=reservationtime).exists():
-        logger.warning("ReservationTime updated failed: user_id=%s, reservationtime_id=%s", user_id, reservationtime_id)
+        logger.warning("ReservationTime updated failed: user_id=%s, reservationtime_id=%s", operator_id, reservationtime_id)
         raise serializers.ValidationError({"Error": "该预约时段有预约记录，不可修改"})
 
     new_date = validated_data.get("date", reservationtime.date)
     new_time = validated_data.get("time", reservationtime.time)
+    if new_date != reservationtime.date:
+        if new_date <= timezone.localdate():
+            raise serializers.ValidationError({"Error": "修改日期必须从明天开始"})
 
     exists = ReservationTime.objects.filter(
         lab=new_lab,
@@ -100,14 +119,14 @@ def update_reservationtime(reservationtime_id, validated_data, user_id):
     if validated_data:
         reservationtime.save(update_fields=list(validated_data.keys()))
 
-    logger.info("ReservationTime updated successfully: " \
+    transaction.on_commit(lambda: logger.info("ReservationTime updated successfully: " \
             "reservationtime_id=%s, original_lab_id=%s, target_lab_id=%s, user_id=%s",
-            reservationtime.id, original_lab_id, target_lab_id, user_id)
+            reservationtime.id, original_lab_id, target_lab_id, operator_id))
 
     return reservationtime
 
 @transaction.atomic
-def create_reservationtime(validated_data, user_id, labadmin_id=None, is_superuser=False):
+def _create_reservationtime_atomic(validated_data, operator_id, labadmin_id=None, is_superuser=False):
     # 1. 取得请求中的实验室编号
     lab_no = validated_data["lab_no"]
 
@@ -119,8 +138,8 @@ def create_reservationtime(validated_data, user_id, labadmin_id=None, is_superus
     except Laboratory.DoesNotExist:
         logger.warning(
             "ReservationTime created failed: "
-            "lab not found, lab_no=%s, user_id=%s",
-            lab_no, user_id
+            "lab not found, lab_no=%s, operator_id=%s",
+            lab_no, operator_id
         )
         raise serializers.ValidationError({
             "Error": "该实验室不存在"
@@ -142,8 +161,8 @@ def create_reservationtime(validated_data, user_id, labadmin_id=None, is_superus
     if not is_superuser and (labadmin_id is None or lab.labadmin_id != labadmin_id):
         logger.warning(
             "ReservationTime created failed: "
-            "permission denied, lab_id=%s, user_id=%s",
-            lab.id, user_id
+            "permission denied, lab_id=%s, operator_id=%s",
+            lab.id, operator_id
         )
         raise serializers.ValidationError({
             "Error": "不允许创建其他管理员的实验室时段"
@@ -156,17 +175,17 @@ def create_reservationtime(validated_data, user_id, labadmin_id=None, is_superus
             "Error": "预约时间必须从明天开始"
         })
 
-    # 7. 检查是否已经存在相同的预约时段
-    exists = ReservationTime.objects.filter(
-        lab=lab,
-        date=date,
-        time=validated_data["time"]
-    ).exists()
+    # # 7. 检查是否已经存在相同的预约时段
+    # exists = ReservationTime.objects.filter(
+    #     lab=lab,
+    #     date=date,
+    #     time=validated_data["time"]
+    # ).exists()
 
-    if exists:
-        raise serializers.ValidationError({
-            "Error": "该实验室的时间段已添加，不可重复添加"
-        })
+    # if exists:
+    #     raise serializers.ValidationError({
+    #         "Error": "该实验室的时间段已添加，不可重复添加"
+    #     })
 
     # 8. 创建预约时段
     reservationtime = ReservationTime.objects.create(
@@ -176,16 +195,39 @@ def create_reservationtime(validated_data, user_id, labadmin_id=None, is_superus
     )
 
     # 9. 记录成功日志
-    logger.info(
+    transaction.on_commit(lambda: logger.info(
         "ReservationTime created successfully: "
-        "reservationtime_id=%s, lab_id=%s, lab_no=%s, user_id=%s",
+        "reservationtime_id=%s, lab_id=%s, lab_no=%s, operator_id=%s",
         reservationtime.id,
         lab.id,
         lab.lab_no,
-        user_id
-    )
+        operator_id
+    ))
 
     return reservationtime
+
+def create_reservationtime(validated_data, operator_id, labadmin_id=None, is_superuser=False):
+    try:
+        return _create_reservationtime_atomic(
+            validated_data=validated_data, 
+            operator_id=operator_id,
+            labadmin_id=labadmin_id, 
+            is_superuser=is_superuser
+            )
+    except IntegrityError:
+        lab_no = validated_data.get("lab_no")
+        lab = Laboratory.objects.get(lab_no=lab_no)
+        if ReservationTime.objects.filter(
+            lab=lab, 
+            date=validated_data.get("date"),
+            time=validated_data.get("time")
+            ).exists():
+            raise serializers.ValidationError({"Error": "该实验室预约时段重复，请重选时段"})
+        raise serializers.ValidationError({"Error": "数据库数据异常"})
+
+    
+
+    
 
     
 
