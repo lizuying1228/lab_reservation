@@ -90,9 +90,9 @@ def delete_student(student_id, operator_id):
     user.is_active = False
     user.save(update_fields=["is_active"])
 
-    logger.info("Student deleted successfully:" \
+    transaction.on_commit(lambda: logger.info("Student deleted successfully:" \
                 "student_id=%s, reservation_cancelled_count=%s, operator_id=%s", 
-                student.id, cancelled_count, operator_id)
+                student.id, cancelled_count, operator_id))
 
     return student
 
@@ -189,9 +189,9 @@ def update_student(student_id, validated_data, operator_id):
 
     if update_fields:
         student.save(update_fields=update_fields)
-        logger.info("Student updated successfully: "
+        transaction.on_commit(lambda: logger.info("Student updated successfully: "
                     "student_id=%s, update_fields=%s, operator=%s",
-                    student.id, update_fields, operator_id)
+                    student.id, update_fields, operator_id))
 
     return student
     

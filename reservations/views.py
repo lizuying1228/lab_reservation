@@ -2,7 +2,7 @@ from reservations.models import Reservation
 from reservations.serializers import (ReservationCreateSerializer, ReservationReviewSerializer, 
                                       ReservationSerializer)
 from reservations.permissions import ReservationPermission
-from reservations.services import review_reservation, cancel_reservation
+from reservations.services import review_reservation, cancel_reservation, create_reservation
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -44,22 +44,21 @@ class ReservationViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        reservation = serializer.save()
+        reservation = create_reservation(
+            validated_data=serializer.validated_data,
+            operator_id=request.user.id
+        )
 
-        response_serializer = ReservationSerializer(reservation)
-        logger.info(
-            "Reservation created successfully: reservation_id=%s, student_id=%s, reservationtime_id=%s, user_id=%s",
-            reservation.id,
-            reservation.student_id,
-            reservation.reservationtime_id,
-            request.user.id
+        response_serializer = ReservationSerializer(
+            reservation,
+            context=self.get_serializer_context()
         )
 
         return Response(
-            {"reservation": response_serializer.data},
+            response_serializer.data,
             status=status.HTTP_201_CREATED
         )
-
+        
 
     @action(detail=True, methods=["patch"], url_name="review", url_path="review")
     def review(self, request, pk=None):

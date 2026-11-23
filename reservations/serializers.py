@@ -12,42 +12,33 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
 
     reservationtime_id = serializers.IntegerField(required=True, write_only=True)
 
-    def validate(self, attrs):
-        user = self.context["request"].user
-        if not hasattr(user, "student"):
-            raise serializers.ValidationError({"Error": "该账户不是学生"})
+    # def validate(self, attrs):
+    #     user = self.context["request"].user
+    #     if not hasattr(user, "student"):
+    #         raise serializers.ValidationError({"Error": "该账户不是学生"})
         
-        reservationtime_id = attrs.get("reservationtime_id")
-        try:
-            reservationtime = ReservationTime.objects.get(id = reservationtime_id, is_deleted=False)
-        except ReservationTime.DoesNotExist:
-            raise serializers.ValidationError({"Error": "预约时段不存在"})
+    #     reservationtime_id = attrs.get("reservationtime_id")
+    #     try:
+    #         reservationtime = ReservationTime.objects.get(id = reservationtime_id, is_deleted=False)
+    #     except ReservationTime.DoesNotExist:
+    #         raise serializers.ValidationError({"Error": "预约时段不存在"})
 
-        if reservationtime.lab.is_deleted or reservationtime.lab.status != Laboratory.StatusChoices.OPEN:
-            raise serializers.ValidationError({"Error": "预约实验室不存在或者未开放"})
+    #     if reservationtime.lab.is_deleted or reservationtime.lab.status != Laboratory.StatusChoices.OPEN:
+    #         raise serializers.ValidationError({"Error": "预约实验室不存在或者未开放"})
 
-        if reservationtime.date <= timezone.localdate():
-            raise serializers.ValidationError({"Error": "预约日期必须从明天开始"})
+    #     if reservationtime.date <= timezone.localdate():
+    #         raise serializers.ValidationError({"Error": "预约日期必须从明天开始"})
 
-        if reservationtime.status != ReservationTime.StatusChoices.AVAILABLE:
-            raise serializers.ValidationError({"Error": "预约时间已被占用"})
+    #     if reservationtime.status != ReservationTime.StatusChoices.AVAILABLE:
+    #         raise serializers.ValidationError({"Error": "预约时间已被占用"})
 
-        attrs["reservationtime"] = reservationtime
+    #     attrs["reservationtime"] = reservationtime
 
-        exists = Reservation.objects.filter(student=user.student, reservationtime=reservationtime).exists()
-        if exists:
-            raise serializers.ValidationError({"Error": "该账户已预约过此时间段"})
+    #     exists = Reservation.objects.filter(student=user.student, reservationtime=reservationtime).exists()
+    #     if exists:
+    #         raise serializers.ValidationError({"Error": "该账户已预约过此时间段"})
 
-        return attrs
-
-    @transaction.atomic
-    def create(self, validated_data):
-        user = self.context["request"].user
-        student = user.student
-        validated_data.pop("reservationtime_id")
-        reservationtime = validated_data.pop("reservationtime")
-        return Reservation.objects.create(student=student, reservationtime=reservationtime)
-
+    #     return attrs
 
 class ReservationReviewSerializer(serializers.Serializer):
     status = serializers.ChoiceField(

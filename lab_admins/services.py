@@ -44,9 +44,9 @@ def delete_labadmin(labadmin_id, operator_id):
     labadmin.deleted_at = now
     labadmin.save(update_fields=["is_deleted", "deleted_at"])
 
-    logger.info("Labadmin deleted successfullly: "
+    transaction.on_commit(lambda: logger.info("Labadmin deleted successfullly: "
                 "labadmin_id=%s, lab_count=%s, operator_id=%s",
-                labadmin_id, lab_count, operator_id)
+                labadmin_id, lab_count, operator_id))
 
     return labadmin
 
@@ -110,9 +110,9 @@ def update_labadmin(labadmin_id, validated_data, operator_id):
 
     if update_fields:
         labadmin.save(update_fields=update_fields)
-        logger.info("LabAdmin updated successfully: "
+        transaction.on_commit(lambda: logger.info("LabAdmin updated successfully: "
                     "labadmin_id=%s, admin_no=%s, update_fields=%s, operator_id=%s",
-                    labadmin.id, labadmin.admin_no, update_fields, operator_id)
+                    labadmin.id, labadmin.admin_no, update_fields, operator_id))
 
     return labadmin
 

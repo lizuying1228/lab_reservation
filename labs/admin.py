@@ -42,7 +42,7 @@ class LaboratoryAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return request.user.is_superuser
 
     def save_model(self, request, obj, form, change):
         if change:

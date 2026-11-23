@@ -28,7 +28,7 @@ class UserRegisterView(APIView):
             return Response({"message": "注册成功", 
                              "user": serializer.data}, status=status.HTTP_201_CREATED)
         
-        logger.warning("User registration validation failed: user_id=%s", user.pk)
+        logger.warning("User registration validation failed: errors=%s", serializer.errors)
         return Response({"Error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -78,8 +78,7 @@ class UserDeleteView(APIView):
     permission_classes = [IsSuperuser]
 
     def delete(self, request, user_id):
-        user = get_object_or_404(User, id = user_id)
-        delete_user(target_user_id=user.id, operator_id=request.user.id)
+        delete_user(target_user_id=user_id, operator_id=request.user.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
