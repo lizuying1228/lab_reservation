@@ -67,7 +67,7 @@ class ReservationViewSet(ModelViewSet):
 
         serializer.is_valid(raise_exception=True)
         target_status = serializer.validated_data["status"]
-        result = review_reservation(reservation_id=reservation.id, target_status=target_status)
+        result = review_reservation(reservation_id=reservation.id, target_status=target_status, operator_id=request.user.id)
         response_serializer = ReservationSerializer(result)
 
         return Response({"reservation": response_serializer.data}, status=status.HTTP_200_OK)
@@ -77,7 +77,7 @@ class ReservationViewSet(ModelViewSet):
     def cancel(self, request, pk=None):
         reservation = self.get_object()
 
-        result = cancel_reservation(reservation_id=reservation.id)
+        result = cancel_reservation(reservation_id=reservation.id, operator_id=request.user.id)
         response_serializer = ReservationSerializer(result)
 
         return Response({"reservation": response_serializer.data}, status=status.HTTP_200_OK)

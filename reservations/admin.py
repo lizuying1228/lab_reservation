@@ -82,6 +82,7 @@ class ReservationAdmin(admin.ModelAdmin):
                 review_reservation(
                     reservation_id=reservation.id,
                     target_status=target_status,
+                    operator_id=request.user.id
                 )
                 success_count += 1
 

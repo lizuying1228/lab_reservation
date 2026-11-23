@@ -28,13 +28,13 @@ def delete_user(target_user_id, operator_id):
         auth_type = "student"
         student = user.student
         if not student.is_deleted:
-            delete_student(student_id=student.id, user_id=operator_id)
+            delete_student(student_id=student.id, operator_id=operator_id)
 
     elif hasattr(user, "labadmin"):
         auth_type = "labadmin"
         labadmin = user.labadmin
         if not labadmin.is_deleted:
-            delete_labadmin(labadmin_id=labadmin.id, user_id=operator_id)
+            delete_labadmin(labadmin_id=labadmin.id, operator_id=operator_id)
 
 
     outstanding_tokens = OutstandingToken.objects.filter(user=user)

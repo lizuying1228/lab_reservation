@@ -46,7 +46,7 @@ class LaboratoryAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if change:
-            update_laboratory(
+            lab = update_laboratory(
                 lab_id=obj.id,
                 validated_data={
                     "position": obj.position,
@@ -56,7 +56,7 @@ class LaboratoryAdmin(admin.ModelAdmin):
                 operator_id=request.user.id,
             )
         else:
-            create_laboratory(
+            lab = create_laboratory(
                 validated_data={
                     "lab_no": obj.lab_no,
                     "position": obj.position,
@@ -65,6 +65,8 @@ class LaboratoryAdmin(admin.ModelAdmin):
                 },
                 operator_id=request.user.id,
             )
+        obj.pk = lab.pk
+        obj.refresh_from_db()
 
     def delete_model(self, request, obj):
         delete_laboratory(

@@ -25,7 +25,8 @@ class LaboratoryCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         operator_id = self.context["request"].user.id
-        create_laboratory(validated_data=validated_data, operator_id=operator_id)
+        laboratory = create_laboratory(validated_data=validated_data, operator_id=operator_id)
+        return laboratory
 
 
 class LaboratorySerializer(serializers.ModelSerializer):
@@ -36,5 +37,5 @@ class LaboratorySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         operator_id = self.context["request"].user.id
-        update_laboratory(lab_id=instance.id, validated_data=validated_data, operator_id=operator_id)
-        
+        laboratory = update_laboratory(lab_id=instance.id, validated_data=validated_data, operator_id=operator_id)
+        return laboratory

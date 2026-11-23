@@ -29,7 +29,7 @@ class ReservationTimeAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if change:
-            update_reservationtime(
+            reservationtime = update_reservationtime(
                 reservationtime_id=obj.id,
                 validated_data={
                     "lab": obj.lab,
@@ -39,7 +39,7 @@ class ReservationTimeAdmin(admin.ModelAdmin):
                 operator_id=request.user.id
             )
         else:
-            create_reservationtime(
+            reservationtime = create_reservationtime(
                 validated_data={
                     "lab_no": obj.lab.lab_no,
                     "date": obj.date,
@@ -47,6 +47,8 @@ class ReservationTimeAdmin(admin.ModelAdmin):
                 },
                 operator_id=request.user.id
             )
+        obj.pk = reservationtime.pk
+        obj.refresh_from_db()
 
     def delete_model(self, request, obj):
         delete_reservationtime(reservationtime_id=obj.id, operator_id=request.user.id)

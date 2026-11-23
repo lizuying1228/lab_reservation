@@ -31,6 +31,6 @@ class LabViewSet(ModelViewSet):
         serializer.save()
 
     def perform_destroy(self, instance):
-        operator_id = self.request.user
+        operator_id = self.request.user.id
         delete_laboratory(lab_id=instance.id, operator_id=operator_id)
         

@@ -6,6 +6,7 @@ from rest_framework import serializers
 from django.db import transaction, IntegrityError
 from datetime import datetime, time
 from django.utils import timezone
+from datetime import timedelta
 from django.contrib.auth import get_user_model
 import logging
 
@@ -221,8 +222,13 @@ def _create_reservation_atomic(validated_data, operator_id):
     if laboratory.id != reservationtime.lab_id:
         raise serializers.ValidationError({"Error": "预约时段实验室变化，请重试"})
 
-    if reservationtime.date <= timezone.localdate():
+    today = timezone.localdate()
+
+    if reservationtime.date <= today:
         raise serializers.ValidationError({"Error": "预约日期必须从明天开始"})
+
+    if reservationtime.date > today + timedelta(days=7):
+        raise serializers.ValidationError({"Error": "只能预约未来七天的时间"})
 
     if reservationtime.status != ReservationTime.StatusChoices.AVAILABLE:
         raise serializers.ValidationError({"Error": "预约时间已被占用"})

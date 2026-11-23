@@ -20,9 +20,9 @@ class StudentCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        user_id = attrs.get("user_id", "")
-        username = attrs.get("username", "")
-        password = attrs.get("password", "")
+        user_id = attrs.get("user_id")
+        username = attrs.get("username")
+        password = attrs.get("password")
 
         if user_id is not None:
             if username or password:
