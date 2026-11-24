@@ -9,12 +9,26 @@
       <el-menu router :default-active="$route.path" class="nav-menu">
         <el-menu-item index="/dashboard"><el-icon><DataBoard /></el-icon><span>工作台</span></el-menu-item>
         <el-menu-item index="/reservations"><el-icon><Calendar /></el-icon><span>预约管理</span></el-menu-item>
+
+        <div class="menu-label">资源管理</div>
+
+        <el-menu-item index="/labs">
+          <el-icon><OfficeBuilding /></el-icon>
+          <span>实验室列表</span>
+        </el-menu-item>
+
+        <el-menu-item index="/times">
+          <el-icon><Clock /></el-icon>
+          <span>预约时段</span>
+        </el-menu-item>
+
         <template v-if="auth.role !== 'student'">
-          <div class="menu-label">资源管理</div>
-          <el-menu-item index="/labs"><el-icon><OfficeBuilding /></el-icon><span>实验室管理</span></el-menu-item>
-          <el-menu-item index="/times"><el-icon><Clock /></el-icon><span>预约时段</span></el-menu-item>
-          <el-menu-item index="/students"><el-icon><User /></el-icon><span>学生管理</span></el-menu-item>
+          <el-menu-item index="/students">
+            <el-icon><User /></el-icon>
+            <span>学生管理</span>
+          </el-menu-item>
         </template>
+
         <template v-if="auth.role === 'superuser'">
           <div class="menu-label">系统管理</div>
           <el-menu-item index="/labadmins"><el-icon><Avatar /></el-icon><span>管理员管理</span></el-menu-item>

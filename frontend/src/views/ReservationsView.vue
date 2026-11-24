@@ -22,9 +22,57 @@
       </el-table>
       <div class="table-foot"><span>共 {{ total }} 条记录</span><el-pagination v-model:current-page="page" :page-size="8" :total="total" layout="total, prev, pager, next" @current-change="load" /></div>
     </section>
-    <el-dialog v-model="applyDialog" title="申请预约" width="520px">
-      <el-form label-position="top"><el-form-item label="选择预约时段"><el-select v-model="reservationtimeId" filterable placeholder="请选择可预约时段" style="width:100%"><el-option v-for="t in availableTimes" :key="t.id" :value="t.id" :label="timeLabel(t)" /></el-select></el-form-item></el-form>
-      <template #footer><el-button @click="applyDialog=false">取消</el-button><el-button type="primary" :loading="saving" @click="apply">提交申请</el-button></template>
+    <el-dialog v-model="applyDialog" title="申请预约" width="760px">
+      <el-table
+        :data="availableTimes"
+        v-loading="availableLoading"
+        highlight-current-row
+        @row-click="(row: any) => reservationtimeId = row.id"
+      >
+        <el-table-column label="选择" width="70" align="center">
+          <template #default="{ row }">
+            <el-radio
+              v-model="reservationtimeId"
+              :label="row.id"
+              @click.stop
+            />
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="id" label="编号" width="80" />
+
+        <el-table-column label="实验室" min-width="150">
+          <template #default="{ row }">
+            {{ display(row.lab) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="date" label="预约日期" min-width="130" />
+
+        <el-table-column label="时段" width="100">
+          <template #default="{ row }">
+            {{ { morning: '上午', afternoon: '下午', evening: '晚上' }[row.time] || row.time }}
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="table-foot">
+        <span>共 {{ availableTotal }} 条可预约时段</span>
+        <el-pagination
+          v-model:current-page="availablePage"
+          :page-size="8"
+          :total="availableTotal"
+          layout="prev, pager, next"
+          @current-change="loadAvailableTimes"
+        />
+      </div>
+
+      <template #footer>
+        <el-button @click="applyDialog = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="apply">
+          提交申请
+        </el-button>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -35,6 +83,9 @@ import http, { errorMessage } from '../api/http'
 import { useAuthStore } from '../stores/auth'
 const auth = useAuthStore(), items=ref<any[]>([]), loading=ref(false), saving=ref(false)
 const search=ref(''), status=ref(''), applyDialog=ref(false), reservationtimeId=ref<number|undefined>(), availableTimes=ref<any[]>([]), page=ref(1), total=ref(0)
+const availablePage = ref(1)
+const availableTotal = ref(0)
+const availableLoading = ref(false)
 const statuses=[{label:'待审核',value:'pending'},{label:'已通过',value:'approved'},{label:'已拒绝',value:'rejected'},{label:'已取消',value:'cancelled'}]
 const canReview=computed(()=>auth.role==='labadmin'||auth.role==='superuser')
 const statusLabel=(s:string)=>({pending:'待审核',approved:'已通过',rejected:'已拒绝',cancelled:'已取消'}[s]||s)
@@ -48,9 +99,35 @@ async function load(){
   } catch(e){ElMessage.error(errorMessage(e))} finally{loading.value=false}
 }
 const timeLabel=(t:any)=>`#${t.id} · ${display(t.lab)} · ${t.date} · ${{morning:'上午',afternoon:'下午',evening:'晚上'}[t.time]||t.time}`
-async function openApply(){
-  try{const {data}=await http.get('/reservationtimes/',{params:{status:'available'}});availableTimes.value=rows(data).filter((x:any)=>x.status==='available');reservationtimeId.value=undefined;applyDialog.value=true}
-  catch(e){ElMessage.error(errorMessage(e))}
+async function loadAvailableTimes() {
+  availableLoading.value = true
+
+  try {
+    const { data } = await http.get('/reservationtimes/', {
+      params: {
+        status: 'available',
+        page: availablePage.value,
+        page_size: 8
+      }
+    })
+
+    availableTimes.value = rows(data)
+    availableTotal.value = data.count ?? availableTimes.value.length
+
+  } catch (e) {
+    ElMessage.error(errorMessage(e))
+  } finally {
+    availableLoading.value = false
+  }
+}
+
+async function openApply() {
+  availablePage.value = 1
+  reservationtimeId.value = undefined
+
+  await loadAvailableTimes()
+
+  applyDialog.value = true
 }
 async function apply(){
   if(!reservationtimeId.value)return ElMessage.warning('请选择预约时段')

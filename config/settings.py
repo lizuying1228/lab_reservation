@@ -35,6 +35,9 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
 
 
 # Application definition
@@ -59,6 +62,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     'django_filters',
     'drf_spectacular',
+    'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -66,6 +70,7 @@ AUTH_USER_MODEL = 'users.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

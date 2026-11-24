@@ -4,6 +4,7 @@ from reservation_times.permissions import ReservationTimePermission
 from reservation_times.services import delete_reservationtime, update_reservationtime, create_reservationtime
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import serializers
+from django.utils import timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,10 +19,10 @@ class ReservationTimeViewSet(ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser or hasattr(user, "student"):
-            return ReservationTime.objects.filter(is_deleted=False, lab__is_deleted=False).select_related("lab")
+            return ReservationTime.objects.filter(is_deleted=False, lab__is_deleted=False, date__gte=timezone.localdate()).select_related("lab")
         
         elif hasattr(user, "labadmin"):
-            return ReservationTime.objects.filter(is_deleted=False, lab__is_deleted=False, lab__labadmin__user=user).select_related("lab")
+            return ReservationTime.objects.filter(is_deleted=False, lab__is_deleted=False, lab__labadmin__user=user,  date__gte=timezone.localdate()).select_related("lab")
 
         return ReservationTime.objects.none()
 

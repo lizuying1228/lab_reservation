@@ -34,7 +34,6 @@ router.beforeEach(async (to) => {
   }
   if (to.path === '/users' && auth.role !== 'superuser') return '/dashboard'
   if (to.path === '/labadmins' && auth.role !== 'superuser') return '/dashboard'
-  if (['/labs', '/times'].includes(to.path) && auth.role === 'student') return '/dashboard'
   if (to.path === '/students' && auth.role === 'student') return '/dashboard'
   return true
 })

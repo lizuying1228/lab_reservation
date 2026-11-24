@@ -1,5 +1,5 @@
 <template>
-  <ResourcePage title="学生管理" eyebrow="PEOPLE" description="管理学生档案。新建档案时可绑定已有账号，或同时创建新账号。" endpoint="/students/" :columns="columns" :fields="fields" :edit-fields="editFields" :create-payload="createPayload" :can-create="auth.role==='superuser'" :can-edit="true" :can-delete="auth.role==='superuser'" />
+  <ResourcePage title="学生管理" eyebrow="PEOPLE" description="管理学生档案。新建档案时可绑定已有账号，或同时创建新账号。" endpoint="/students/" :columns="columns" :fields="fields" :edit-fields="editFields" :create-payload="createPayload" :can-create="auth.role==='superuser'" :can-edit="auth.role==='superuser'" :can-delete="auth.role==='superuser'" />
 </template>
 <script setup lang="ts">
 import ResourcePage from '../components/ResourcePage.vue'

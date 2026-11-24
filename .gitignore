@@ -10,3 +10,10 @@ wheels/
 .venv
 logs/*.log
 .env
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Python type checking cache
+.mypy_cache/

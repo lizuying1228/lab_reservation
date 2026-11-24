@@ -1,5 +1,5 @@
 <template>
-  <ResourcePage title="实验室管理" eyebrow="RESOURCE CENTER" description="维护实验室基础信息、开放状态与负责人。" endpoint="/labs/" :columns="columns" :fields="fields" :can-create="auth.role==='superuser'" :can-edit="false" :can-delete="auth.role==='superuser'" />
+  <ResourcePage title="实验室管理" eyebrow="RESOURCE CENTER" description="维护实验室基础信息、开放状态与负责人。" endpoint="/labs/" :columns="columns" :fields="fields" :can-create="auth.role==='superuser' || auth.role === 'labadmin'" :can-edit="auth.role==='superuser'" :can-delete="auth.role==='superuser'" />
 </template>
 <script setup lang="ts">
 import ResourcePage from '../components/ResourcePage.vue'
