@@ -161,8 +161,8 @@ def _create_reservationtime_atomic(validated_data, operator_id, labadmin_id=None
     if not is_superuser and (labadmin_id is None or lab.labadmin_id != labadmin_id):
         logger.warning(
             "ReservationTime created failed: "
-            "permission denied, lab_id=%s, operator_id=%s",
-            lab.id, operator_id
+            "permission denied, lab_id=%s, operator_id=%s, is_superuser=%s",
+            lab.id, operator_id, is_superuser
         )
         raise serializers.ValidationError({
             "Error": "不允许创建其他管理员的实验室时段"

@@ -39,13 +39,21 @@ class ReservationTimeAdmin(admin.ModelAdmin):
                 operator_id=request.user.id
             )
         else:
+            user = request.user
+            labadmin_id = None
+
+            if hasattr(user, "labadmin"):
+                labadmin_id = user.labadmin_id
+
             reservationtime = create_reservationtime(
                 validated_data={
                     "lab_no": obj.lab.lab_no,
                     "date": obj.date,
                     "time": obj.time
                 },
-                operator_id=request.user.id
+                operator_id=request.user.id,
+                labadmin_id=labadmin_id,
+                is_superuser=user.is_superuser
             )
         obj.pk = reservationtime.pk
         obj.refresh_from_db()

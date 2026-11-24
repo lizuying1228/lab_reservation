@@ -13,6 +13,31 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 class ReservationViewSet(ModelViewSet):
     permission_classes = [ReservationPermission]
+    filterset_fields = [ 
+        "student",
+        "reservationtime", 
+        "reservationtime__lab",
+        "reservationtime__date",
+        "reservationtime__time",
+        "status",
+        ]
+    
+    search_fields = [
+        "student__name",
+        "student__student_no",
+        "reservationtime__lab__lab_no",
+        "reservationtime__lab__position",
+    ]
+
+    ordering_fields = [
+        "id",
+        "created_at",
+        "status",
+        "reservationtime__date",
+        "reservationtime__time",
+    ]
+
+    ordering = ["id"]
 
     def get_queryset(self):
         user = self.request.user

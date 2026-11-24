@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 class StudentViewSet(ModelViewSet):
     permission_classes = [StudentPermission]
+    filterset_fields = ["student_no", "name"]
+    search_fields = ["name", "student_no", "user__username"]
+    ordering_fields = ["id", "name", "student_no", "birth_date"]
+    ordering = ["id"]
 
     def get_serializer_class(self):
         if self.action == "create":

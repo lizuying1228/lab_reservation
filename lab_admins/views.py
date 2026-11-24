@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 
 class LabAdminViewSet(ModelViewSet):
     permission_classes = [LabAdminPermission]
+    filterset_fields = ["name", "admin_no"]
+    search_fields = ["name", "admin_no", "user__username"]
+    ordering_fields = ["id", "name", "admin_no", "birth_date"]
+    ordering = ["id"]
 
     def get_queryset(self):
         user = self.request.user

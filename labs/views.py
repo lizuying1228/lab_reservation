@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 class LabViewSet(ModelViewSet):
     permission_classes = [LabPermission]
+    filterset_fields = ["lab_no", "status", "labadmin"]
+    search_fields = ["lab_no", "position", "labadmin__name", "labadmin__admin_no"]
+    ordering_fields = ["id", "lab_no", "position", "status"]
+    ordering = ["id"]
+
 
     def get_queryset(self):
         user = self.request.user

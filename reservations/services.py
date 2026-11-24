@@ -222,6 +222,9 @@ def _create_reservation_atomic(validated_data, operator_id):
     if laboratory.id != reservationtime.lab_id:
         raise serializers.ValidationError({"Error": "预约时段实验室变化，请重试"})
 
+    if reservationtime.is_deleted:
+        raise serializers.ValidationError({"Error": "预约时段已删除"})
+
     today = timezone.localdate()
 
     if reservationtime.date <= today:

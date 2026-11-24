@@ -68,5 +68,32 @@ class UserLogoutSerializer(serializers.Serializer):
             raise serializers.ValidationError({"Error": "Refresh Token 已无效"})
 
         return attrs
+
+class MessageResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+
+
+class RegisterUserDataSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField(allow_blank=True, required=False)
+    phone = serializers.CharField(allow_blank=True, required=False)
+
+
+class UserRegisterResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+    user = RegisterUserDataSerializer()
+
+
+class UserProfileResponseSerializer(serializers.Serializer):
+    user = UserProfileSerializer()
+
+
+class UserProfileUpdateResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+    user = UserProfileSerializer()
+
+
+class ManualValidationErrorResponseSerializer(serializers.Serializer):
+    Error = serializers.JSONField()
     
 
