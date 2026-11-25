@@ -11,7 +11,7 @@
       <el-table :data="items" v-loading="loading" stripe>
         <el-table-column v-for="col in columns" :key="col.prop" :prop="col.prop" :label="col.label" :min-width="col.width || 130" show-overflow-tooltip>
           <template v-if="col.format" #default="{row}">{{ col.format(row[col.prop], row) }}</template>
-          <template v-else-if="col.tag" #default="{row}"><el-tag :type="col.tag(row[col.prop])">{{ col.format ? col.format(row[col.prop],row) : row[col.prop] }}</el-tag></template>
+          <template v-else-if="col.tag" #default="{row}"><el-tag :type="col.tag!(row[col.prop])">{{ col.format ? col.format(row[col.prop],row) : row[col.prop] }}</el-tag></template>
         </el-table-column>
         <el-table-column v-if="canEdit || canDelete" label="操作" width="150" fixed="right">
           <template #default="{row}">

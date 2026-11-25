@@ -51,7 +51,7 @@
 
         <el-table-column label="时段" width="100">
           <template #default="{ row }">
-            {{ { morning: '上午', afternoon: '下午', evening: '晚上' }[row.time] || row.time }}
+            {{ timeLabels[String(row.time)] || row.time }}
           </template>
         </el-table-column>
       </el-table>
@@ -87,6 +87,11 @@ const availablePage = ref(1)
 const availableTotal = ref(0)
 const availableLoading = ref(false)
 const statuses=[{label:'待审核',value:'pending'},{label:'已通过',value:'approved'},{label:'已拒绝',value:'rejected'},{label:'已取消',value:'cancelled'}]
+const timeLabels: Record<string, string> = {
+  morning: '上午',
+  afternoon: '下午',
+  evening: '晚上',
+}
 const canReview=computed(()=>auth.role==='labadmin'||auth.role==='superuser')
 const statusLabel=(s:string)=>({pending:'待审核',approved:'已通过',rejected:'已拒绝',cancelled:'已取消'}[s]||s)
 const tagType=(s:string)=>({pending:'warning',approved:'success',rejected:'danger',cancelled:'info'}[s]||'info') as any
@@ -98,7 +103,8 @@ async function load(){
     const {data}=await http.get('/reservations/',{params}); items.value=rows(data); total.value=data.count ?? items.value.length
   } catch(e){ElMessage.error(errorMessage(e))} finally{loading.value=false}
 }
-const timeLabel=(t:any)=>`#${t.id} · ${display(t.lab)} · ${t.date} · ${{morning:'上午',afternoon:'下午',evening:'晚上'}[t.time]||t.time}`
+const timeLabel = (t: any) =>
+  `#${t.id} · ${display(t.lab)} · ${t.date} · ${timeLabels[String(t.time)] || t.time}`
 async function loadAvailableTimes() {
   availableLoading.value = true
 

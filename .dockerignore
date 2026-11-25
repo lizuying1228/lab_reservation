@@ -1,0 +1,9 @@
+
+.git
+.venv
+__pycache__
+*.py[cod]
+.mypy_cache
+.env
+logs/
+frontend/
